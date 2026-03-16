@@ -1,0 +1,113 @@
+---
+title: "Search mode"
+description: "Preview quiz answers without joining a live Kahoot game using the --search flag."
+---
+
+Search mode lets you look up a Kahoot quiz and print its questions and answers without ever joining a live game. This is useful for reviewing quiz content before a session.
+
+## When to use search mode
+
+Use search mode when you want to:
+
+- Review all questions and correct answers for a quiz ahead of time
+- Verify that the bot has found the right quiz before joining a game
+- Inspect quiz content by UUID or by name without affecting any live session
+
+## How it works
+
+<Steps>
+  <Step title="Invoke with the -s flag">
+    Pass `-s` or `--search` along with either `--quizID` or `--quizName`. The `--nick` and `--pin` flags are ignored when `--search` is set.
+  </Step>
+  <Step title="Bot queries the Kahoot API">
+    If you provided `--quizID`, the bot fetches that quiz directly. If you provided `--quizName`, it sends a search request to the Kahoot API and retrieves up to `--maxCount` results (default: all returned by the API).
+  </Step>
+  <Step title="Interactive confirmation per result">
+    For each quiz returned by a name search, the bot prompts:
+
+    ```text
+    Check 'World Capitals'? [y/N]
+    ```
+
+    Type `y` or `yes` to inspect that quiz. Any other input skips to the next result.
+  </Step>
+  <Step title="Answers are printed">
+    For each confirmed quiz, the bot prints the title, creator, description, and every question-answer pair.
+  </Step>
+</Steps>
+
+## Search by UUID
+
+Fetching by UUID does not require authentication.
+
+```bash
+python kbot -s -i d4f3a2b1-0000-0000-0000-aabbccddeeff
+```
+
+Example output:
+
+```text
+Title: World Capitals
+Creator: quizmaster99
+Desc: Test your knowledge of world capitals!
+What is the capital of France?
+	Paris
+What is the capital of Japan?
+	Tokyo
+What is the capital of Brazil?
+	Brasilia
+```
+
+## Search by name
+
+Searching by name requires a Kahoot account. Pass your credentials with `-e` and `-a`.
+
+```bash
+python kbot -s -q "World Capitals" -e user@example.com -a hunter2
+```
+
+Example interactive session:
+
+```text
+AUTHENTICATED
+3 matching quizzes found
+Check 'World Capitals'? [y/N] y
+Title: World Capitals
+Creator: quizmaster99
+Desc: Test your knowledge of world capitals!
+What is the capital of France?
+	Paris
+What is the capital of Japan?
+	Tokyo
+Check 'World Capitals Quiz'? [y/N] n
+Check 'World Capitals 2024'? [y/N] n
+```
+
+## Controlling result count
+
+By default the Kahoot API returns however many quizzes match your query. Use `--maxCount` to set an upper limit:
+
+```bash
+python kbot -s -q "World Capitals" -e user@example.com -a hunter2 -m 5
+```
+
+This limits the search to 5 results, reducing the number of prompts shown.
+
+<Tip>
+  If you already know the quiz UUID, prefer `-i` over `-q`. UUID lookups are faster and do not require authentication.
+</Tip>
+
+<Warning>
+  Name searches require valid Kahoot credentials. An incorrect email or password results in a `401` error and the bot exits immediately.
+</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Authentication" icon="key" href="/usage/authentication">
+    Configure credentials for name-based searches.
+  </Card>
+  <Card title="Command reference" icon="terminal" href="/usage/command-reference">
+    See all available CLI flags.
+  </Card>
+</Columns>

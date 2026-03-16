@@ -1,0 +1,108 @@
+---
+title: "Command reference"
+description: "Complete reference for all CLI flags and usage patterns for the Kahoot Answer Bot."
+---
+
+The `kbot` CLI accepts flags to control how it joins a game, finds a quiz, and authenticates with Kahoot.
+
+## Flags
+
+<ParamField query="-s, --search" type="boolean">
+  Search for a quiz without joining a Kahoot game. When set, the bot previews quiz answers interactively instead of participating in a live game. Cancels `--nick` and `--pin`.
+</ParamField>
+
+<ParamField query="-d, --debug" type="boolean">
+  Enable verbose debug output. Prints all internal events and socket messages to stdout.
+</ParamField>
+
+<ParamField query="-e, --email" type="string">
+  The email address used to log in to `create.kahoot.it`. Required when searching by quiz name (`--quizName`).
+</ParamField>
+
+<ParamField query="-a, --password" type="string">
+  The password corresponding to the `--email` account. Required when searching by quiz name (`--quizName`).
+</ParamField>
+
+<ParamField query="-n, --nick" type="string">
+  The nickname to join the Kahoot game with. Ignored when `--search` is set.
+</ParamField>
+
+<ParamField query="-p, --pin" type="string">
+  The game pin for the live Kahoot session. Ignored when `--search` is set.
+</ParamField>
+
+<ParamField query="-q, --quizName" type="string">
+  The name of the quiz to search for. Requires `--email` and `--password` for the Kahoot API search.
+</ParamField>
+
+<ParamField query="-i, --quizID" type="string">
+  The UUID of a specific quiz. Fetches the quiz directly without authentication.
+</ParamField>
+
+<ParamField query="-m, --maxCount" type="number">
+  How many quizzes to retrieve when searching by name. Controls the `limit` parameter sent to the Kahoot search API.
+</ParamField>
+
+## Common usage patterns
+
+<CodeGroup>
+
+```bash Join by UUID (no auth)
+python kbot -n MyNick -p 123456 -i d4f3a2b1-0000-0000-0000-aabbccddeeff
+```
+
+```bash Join by name (with auth)
+python kbot -n MyNick -p 123456 -q "World Capitals" -e user@example.com -a hunter2
+```
+
+```bash Search-only by UUID
+python kbot -s -i d4f3a2b1-0000-0000-0000-aabbccddeeff
+```
+
+```bash Search-only by name
+python kbot -s -q "World Capitals" -e user@example.com -a hunter2
+```
+
+```bash With debug output
+python kbot -d -n MyNick -p 123456 -i d4f3a2b1-0000-0000-0000-aabbccddeeff
+```
+
+```bash Interactive mode (no args)
+python kbot
+```
+
+</CodeGroup>
+
+<Note>
+  Running `python kbot` with no arguments starts interactive mode, where the bot prompts you for each required value at runtime.
+</Note>
+
+## Terminal output during a game
+
+Once connected, the bot prints events as they occur in the game session:
+
+```text
+AUTHENTICATED
+Title: World Capitals
+Creator: quizmaster99
+Desc: Test your knowledge of world capitals!
+What is the capital of France?
+	Paris
+What is the capital of Japan?
+	Tokyo
+What is the capital of Brazil?
+	Brasilia
+```
+
+During the live game, the bot listens for socket events (`GET_READY`, `START_QUESTION`, `REVEAL_ANSWER`, etc.) and automatically selects the correct answer for each question.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Search mode" icon="magnifying-glass" href="/usage/search-mode">
+    Preview quiz answers without joining a live game.
+  </Card>
+  <Card title="Authentication" icon="key" href="/usage/authentication">
+    Set up Kahoot credentials and handle 2FA.
+  </Card>
+</Columns>

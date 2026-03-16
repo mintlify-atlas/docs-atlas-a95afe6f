@@ -1,0 +1,87 @@
+---
+title: "Authentication"
+description: "Configure Kahoot credentials for name-based quiz searches and handle two-factor authentication during live games."
+---
+
+## When authentication is required
+
+Authentication is only needed when searching for a quiz **by name** (`--quizName`). If you already have a quiz UUID, you can use `--quizID` without any credentials — the bot fetches the quiz directly from the public Kahoot API.
+
+| Lookup method | Auth required |
+|---|---|
+| `--quizID` | No |
+| `--quizName` | Yes |
+
+## Passing credentials
+
+Supply your `create.kahoot.it` email and password using the `-e`/`--email` and `-a`/`--password` flags:
+
+```bash
+python kbot -n MyNick -p 123456 -q "World Capitals" -e user@example.com -a hunter2
+```
+
+For search-only mode:
+
+```bash
+python kbot -s -q "World Capitals" -e user@example.com -a hunter2
+```
+
+## What happens during authentication
+
+When credentials are provided, the bot sends a POST request to `https://create.kahoot.it/rest/authenticate` with your email, password, and `grant_type: password`.
+
+- **Success (HTTP 200):** The bot prints `AUTHENTICATED` and stores the returned `access_token` for subsequent API requests.
+- **Failure (HTTP 401):** The bot prints `Invalid Email or Password.` and exits.
+- **Other errors:** The bot prints `Login error <status_code>` and exits.
+
+A successful login looks like:
+
+```text
+AUTHENTICATED
+```
+
+## Two-factor authentication (2FA)
+
+Some live Kahoot games require two-factor authentication before the bot can participate. If the game triggers a 2FA challenge, the bot prompts:
+
+```text
+2fa (e.g. rbyg, yrgb) > 
+```
+
+Enter the color sequence shown on the game screen using the following abbreviations:
+
+| Letter | Color |
+|---|---|
+| `r` | Red |
+| `b` | Blue |
+| `y` | Yellow |
+| `g` | Green |
+
+For example, if the screen shows red, blue, yellow, green in order:
+
+```text
+2fa (e.g. rbyg, yrgb) > rbyg
+```
+
+The sequence is submitted to the game socket and the bot continues automatically if accepted.
+
+<Note>
+  2FA only applies to live game sessions. It is not triggered during search mode (`-s`).
+</Note>
+
+## Security considerations
+
+<Warning>
+  Passing credentials directly on the command line stores them in your shell history. Use your operating system's history exclusion mechanisms (e.g., prefixing with a space in bash/zsh, or setting `HISTIGNORE`) or clear your history after use.
+</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Command reference" icon="terminal" href="/usage/command-reference">
+    See all available CLI flags including -e and -a.
+  </Card>
+  <Card title="Search mode" icon="magnifying-glass" href="/usage/search-mode">
+    Use authentication to search quizzes by name.
+  </Card>
+</Columns>

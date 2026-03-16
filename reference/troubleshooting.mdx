@@ -1,0 +1,117 @@
+---
+title: "Troubleshooting"
+description: "Common errors from Kahoot Answer Bot and how to fix them."
+---
+
+All errors are raised as `KahootError` exceptions and printed to the terminal. Find your error message below.
+
+<AccordionGroup>
+  <Accordion title='"Invalid Email or Password."'>
+    **Cause:** The Kahoot authentication endpoint returned HTTP 401 — the email or password you provided is incorrect.
+
+    **Fix:** Double-check your Kahoot account credentials. Make sure you are using the email and password for [create.kahoot.it](https://create.kahoot.it), not a Google or Apple SSO account.
+
+    ```bash
+    python3.9 kbot -n Player1 -p 123456 -q "Quiz Name" -e your@email.com -a yourpassword
+    ```
+  </Accordion>
+
+  <Accordion title='"Login error <code>"'>
+    **Cause:** The Kahoot authentication endpoint returned an unexpected HTTP status code (not 200 or 401). This usually indicates a temporary server-side issue or a network problem.
+
+    **Fix:** Wait a moment and try again. If the error persists, check whether [kahoot.it](https://kahoot.it) is reachable from your network.
+  </Accordion>
+
+  <Accordion title='"Invalid UUID."'>
+    **Cause:** The quiz UUID passed via `-i` is malformed. The Kahoot API returned HTTP 400.
+
+    **Fix:** Verify the UUID format. A valid Kahoot quiz UUID follows the pattern:
+
+    ```text
+    xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    ```
+
+    That is 8 hex characters, then 4, then 4, then 4, then 12, separated by hyphens. For example:
+
+    ```bash
+    python3.9 kbot -n Player1 -p 123456 -i 550fa14b-4b7e-46ac-a239-e8b6d9dc7a89
+    ```
+
+    Copy the UUID directly from the quiz URL on [create.kahoot.it](https://create.kahoot.it) to avoid typos.
+  </Accordion>
+
+  <Accordion title='"Something went wrong finding answers."'>
+    **Cause:** The Kahoot API returned a non-200 response when kbot tried to fetch quiz answers by UUID. The quiz may be private, or the API endpoint may have changed.
+
+    **Fix:**
+    - Confirm the quiz is publicly accessible. Open `https://create.kahoot.it/details/<uuid>` in a browser while logged out to check.
+    - If the quiz is private, you cannot use kbot with it. See [Caveats](/reference/caveats).
+    - If the quiz is public and the error persists, the API endpoint may have changed. Check the [GitHub repository](https://github.com/Raymo111/kahoot-answer-bot) for updates.
+  </Accordion>
+
+  <Accordion title='"Something went wrong searching quizzes."'>
+    **Cause:** The Kahoot search API returned a non-200 response when kbot tried to search for a quiz by name. This is typically a network or API availability issue.
+
+    **Fix:**
+    - Check your internet connection.
+    - Verify your credentials are correct (authentication is required for search).
+    - Try again after a short wait.
+  </Accordion>
+
+  <Accordion title='"No quiz found. (private?)"'>
+    **Cause:** kbot searched for a quiz by name but no matching public quiz was found. The quiz may exist but be set to private, or the name may not match any public quiz.
+
+    **Fix:**
+    - Check the exact quiz name. Partial matches are supported but the name must be close enough for the Kahoot search API to surface it.
+    - Increase `--max-count` (`-m`) to see more results.
+    - If the quiz is private, it will not appear in search results. Use the quiz UUID directly instead (if you have it).
+  </Accordion>
+
+  <Accordion title='"Pin <pin> does not exist."'>
+    **Cause:** The game pin check returned a non-200 status from the Kahoot session endpoint:
+
+    ```python
+    url = f"https://play.kahoot.it/reserve/session/{self.pin}/?{currentTime}"
+    ```
+
+    The pin does not correspond to an active game.
+
+    **Fix:**
+    - Confirm the pin with the host. Kahoot game pins are only active while the host is in the lobby or during the game.
+    - Make sure you are passing the pin as a string with no spaces or extra characters.
+    - If the game has already ended, ask the host to start a new session.
+  </Accordion>
+
+  <Accordion title="ModuleNotFoundError">
+    **Cause:** One or more required packages are not installed in the Python 3.9 environment.
+
+    **Fix:** Install all dependencies using the correct Python version:
+
+    ```bash
+    python3.9 -m pip install -r requirements.txt
+    ```
+
+    Make sure you are running `pip` under Python 3.9 specifically. Using `pip3` or `pip` without a version qualifier may install packages for a different Python version on your system.
+
+    <Note>
+      If you see an error about `aiocometd`, try uncommenting the alternative source in `requirements.txt` that points to the `x_aiocometd` fork, which includes asyncio compatibility fixes.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Wrong answers are being submitted">
+    **Cause:** The game host has enabled answer shuffle, question shuffle, or both. kbot uses the original order from the Kahoot API and cannot detect runtime reordering.
+
+    **Fix:** There is no fix for this within kbot. The host must disable randomization in the game settings for kbot to submit correct answers.
+
+    See [Caveats — Randomized answers](/reference/caveats) and [Caveats — Randomized questions](/reference/caveats) for a full explanation.
+  </Accordion>
+</AccordionGroup>
+
+<Columns cols={2}>
+  <Card title="Caveats" icon="triangle-exclamation" href="/reference/caveats">
+    Known limitations and when kbot will not work correctly.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/reference/configuration">
+    Constructor parameters, constants, and dependency reference.
+  </Card>
+</Columns>

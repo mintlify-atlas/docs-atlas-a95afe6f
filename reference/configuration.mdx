@@ -1,0 +1,123 @@
+---
+title: "Configuration"
+description: "All constructor parameters, internal constants, supported question types, and dependency requirements for Kahoot Answer Bot."
+---
+
+## Constructor parameters
+
+The `Kahoot` class accepts the following parameters when instantiated. All parameters are optional at construction time but several are required at runtime depending on the mode you use.
+
+<ParamField path="pin" type="string">
+  The Kahoot game pin displayed on the lobby screen. Must be passed as a string, not an integer.
+
+  ```python
+  assert type(self.pin) == str
+  ```
+
+  Required to join a live game. Typically a 6–8 digit numeric string.
+</ParamField>
+
+<ParamField path="nickname" type="string">
+  The display name kbot uses when joining the Kahoot lobby. Any string is accepted; Kahoot enforces its own character limits in-game.
+</ParamField>
+
+<ParamField path="quizName" type="string">
+  The quiz title to search for. Used in search-by-name mode. Partial matches are supported; kbot returns the closest results up to `maxCount`.
+
+  Requires `email` and `password` credentials to be provided, since the search endpoint requires authentication.
+</ParamField>
+
+<ParamField path="quizID" type="string">
+  The UUID of the quiz to fetch directly. Expected format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` (8-4-4-4-12 hex characters).
+
+  Passing a malformed UUID raises `KahootError: Invalid UUID.`
+</ParamField>
+
+<ParamField path="maxCount" type="number" default="50">
+  Maximum number of quiz search results to return when searching by name. Defaults to `50` if not specified or if `None` is passed.
+
+  ```python
+  self.maxCount = maxCount if maxCount else 50
+  ```
+</ParamField>
+
+<ParamField path="DEBUG" type="boolean">
+  When truthy, enables verbose debug output throughout the connection and answer-submission flow. Useful for diagnosing session token issues, WebSocket messages, and API responses.
+</ParamField>
+
+## Internal constants
+
+The following values are set internally and are not configurable via constructor parameters. They are documented here for reference.
+
+| Constant | Value | Description |
+|---|---|---|
+| `captchaToken` | `KAHOOT_TOKEN_eyJ2ZXJzaW9uIjoiIn0=` | Hardcoded CAPTCHA bypass token sent during session setup. Works until Kahoot updates their code version. |
+| `DEFAULT_ANSWER` | `1` | Fallback answer index used for unsupported question types. Index `1` maps to **BLUE**. |
+
+## Answer color mapping
+
+Kahoot assigns a color to each answer position. kbot uses this mapping when printing the correct answer to the terminal:
+
+| Index | Color |
+|---|---|
+| `0` | RED |
+| `1` | BLUE |
+| `2` | YELLOW |
+| `3` | GREEN |
+
+```python
+self.colors = {0: "RED", 1: "BLUE", 2: "YELLOW", 3: "GREEN"}
+```
+
+When `DEFAULT_ANSWER = 1` is submitted for an unsupported question type, the answer will appear as **BLUE**.
+
+## Supported question types
+
+kbot only processes questions whose type is in `allowedTypes`. All other question types (slides, videos, polls, etc.) are skipped and `DEFAULT_ANSWER` is submitted as a placeholder.
+
+```python
+allowedTypes = ['quiz', 'multiple_select_quiz']
+```
+
+| Type | Description |
+|---|---|
+| `quiz` | Standard single-answer multiple choice question |
+| `multiple_select_quiz` | Multiple-answer question where more than one option may be correct |
+
+## Python version
+
+kbot requires **Python 3.9** exactly. It is not compatible with Python 3.10 or later due to changes in the `asyncio` event loop API and compatibility constraints from `py_mini_racer` and `aiocometd`.
+
+```bash
+python3.9 --version
+```
+
+## Dependencies
+
+All dependencies are listed in `requirements.txt`.
+
+| Package | Version | Purpose |
+|---|---|---|
+| `requests` | `>=2.20.0` | HTTP client used for all Kahoot REST API calls (auth, quiz fetch, pin check) |
+| `aiocometd` | `==0.4.5` | Async CometD client for the Kahoot WebSocket game protocol |
+| `py_mini_racer` | `=0.6.0` | Embedded V8 JavaScript engine used to solve the session token challenge |
+| `colorama` | `=0.4.6` | Cross-platform terminal color output |
+
+Install all dependencies with:
+
+```bash
+python3.9 -m pip install -r requirements.txt
+```
+
+<Note>
+  The `requirements.txt` includes a commented-out alternative for `aiocometd` that pulls from a fork (`x_aiocometd`) which fixes asyncio errors. If you encounter event loop issues, try uncommenting that line and removing the `aiocometd==0.4.5` entry.
+</Note>
+
+<Columns cols={2}>
+  <Card title="Caveats" icon="triangle-exclamation" href="/reference/caveats">
+    Known limitations and when kbot will not work correctly.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/reference/troubleshooting">
+    Error messages and how to fix them.
+  </Card>
+</Columns>

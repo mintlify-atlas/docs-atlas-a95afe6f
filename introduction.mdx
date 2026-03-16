@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+description: "A Python CLI bot that automatically answers Kahoot quizzes by looking up quiz answers via the Kahoot API and submitting them in real time."
+---
+
+<img
+  className="block"
+  src="https://media.brand.dev/64f0c14f-6ffd-4316-bca9-d8f3fb511874.png"
+  alt="Kahoot Answer Bot"
+  style={{ maxHeight: "80px", marginBottom: "2rem" }}
+/>
+
+# Kahoot Answer Bot
+
+Kahoot Answer Bot (`kbot`) is a Python CLI tool that intercepts and pretends to be a Kahoot client. It looks up quiz answers from the Kahoot API and automatically submits the correct answer for every question — all under a nickname of your choosing.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Python 3.9 and the required dependencies on Windows, macOS, or Linux
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in under 5 minutes with a simple Kahoot game
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/usage/command-reference">
+    Full reference for all CLI flags and options
+  </Card>
+  <Card title="Caveats" icon="triangle-exclamation" href="/reference/caveats">
+    Learn when kbot works and when it doesn't
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Look up the quiz">
+    kbot queries the Kahoot API using a quiz UUID or by searching by name (requires authentication) to retrieve the full question and answer set before the game starts.
+  </Step>
+  <Step title="Join the game">
+    kbot connects to the Kahoot game WebSocket at `wss://play.kahoot.it/cometd/{pin}/{sessionID}` using the CometD protocol, completing the session challenge and 2FA handshake if required.
+  </Step>
+  <Step title="Answer automatically">
+    As each question starts, kbot selects and submits the correct answer index using the pre-fetched answer list. The correct answer is color-coded and printed to the terminal.
+  </Step>
+</Steps>
+
+## Features
+
+- **Auto-answer** — joins a live Kahoot and submits the correct answer for every question
+- **Search by name** — find a quiz by its title when you have a Kahoot account (requires `--email` and `--password`)
+- **Search by UUID** — look up any public quiz directly using its UUID
+- **Search-only mode** — preview all answers without joining a game
+- **2FA support** — handles Kahoot's two-factor authentication challenge interactively
+- **Debug mode** — verbose output for troubleshooting
+- **Multiple select quizzes** — supports both `quiz` and `multiple_select_quiz` question types
+
+## Prerequisites
+
+- Python 3.9
+- A Kahoot game pin
+- The quiz UUID **or** a Kahoot account (email + password) to search by name
+
+<Note>
+  Login credentials are only required when searching for a quiz by name. If you already know the quiz UUID, you can run kbot without an account.
+</Note>

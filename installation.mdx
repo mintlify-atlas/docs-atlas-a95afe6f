@@ -1,0 +1,198 @@
+---
+title: "Installation"
+description: "Install Python 3.9 and the required dependencies on Windows, macOS, or Linux."
+---
+
+## Prerequisites
+
+- **Python 3.9** — kbot requires exactly Python 3.9 due to dependency compatibility
+- **Git** — to clone the repository (or download the zip instead)
+- **pip** — bundled with Python 3.9 by default
+
+<Warning>
+  kbot requires **Python 3.9**. Newer versions (3.10+) may cause compatibility issues with the `py_mini_racer` and `aiocometd` dependencies.
+</Warning>
+
+## Step 1: Install Python 3.9
+
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Download the Python 3.9 installer">
+        Go to [python.org/downloads/windows](https://www.python.org/downloads/windows) and download the **Windows installer (64-bit)** for Python 3.9.
+      </Step>
+      <Step title="Run the installer">
+        Launch the downloaded `.exe`. Check **Add Python 3.9 to PATH** before clicking **Install Now**.
+
+        <Tip>
+          If you already have a different Python version installed, avoid overwriting it — use the custom install path (e.g., `C:\Python39`) and run kbot with `py -3.9` instead of `python3.9`.
+        </Tip>
+      </Step>
+      <Step title="Verify the installation">
+        Open **Command Prompt** and run:
+
+        ```bash
+        python --version
+        ```
+
+        You should see `Python 3.9.x`.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="macOS">
+    <Steps>
+      <Step title="Download the macOS installer">
+        Go to [python.org/downloads/macos](https://www.python.org/downloads/macos) and download the **macOS 64-bit universal2 installer** for Python 3.9. The universal2 build works on both Intel and Apple Silicon Macs.
+      </Step>
+      <Step title="Run the installer">
+        Open the downloaded `.pkg` file and follow the installer prompts.
+      </Step>
+      <Step title="Verify the installation">
+        Open **Terminal** and run:
+
+        ```bash
+        python3.9 --version
+        ```
+
+        You should see `Python 3.9.x`.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Debian / Ubuntu">
+    Python 3.9 is not always available in the default APT repositories for older Debian/Ubuntu releases. The steps below build it from source.
+
+    <Steps>
+      <Step title="Install build dependencies">
+        ```bash
+        sudo apt update && sudo apt install -y \
+          build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
+          libnss3-dev libssl-dev libreadline-dev libffi-dev wget
+        ```
+      </Step>
+      <Step title="Download and extract the Python 3.9 source">
+        ```bash
+        wget https://www.python.org/ftp/python/3.9.7/Python-3.9.7.tgz
+        tar -xf Python-3.9.7.tgz
+        ```
+      </Step>
+      <Step title="Build and install">
+        ```bash
+        cd Python-3.9.7
+        ./configure --enable-optimizations
+        make -j$(nproc)
+        sudo make altinstall
+        ```
+
+        <Note>
+          Use `altinstall` (not `install`) to avoid overwriting your system's default Python binary.
+        </Note>
+      </Step>
+      <Step title="Verify the installation">
+        ```bash
+        python3.9 --version
+        ```
+
+        You should see `Python 3.9.7`.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Arch Linux">
+    Python 3.9 is available via the AUR since Arch ships a newer Python by default.
+
+    <Steps>
+      <Step title="Install an AUR helper (if you don't have one)">
+        ```bash
+        sudo pacman -S --needed base-devel git
+        git clone https://aur.archlinux.org/yay.git
+        cd yay && makepkg -si
+        ```
+      </Step>
+      <Step title="Install python39 from the AUR">
+        ```bash
+        yay -S python39
+        ```
+      </Step>
+      <Step title="Verify the installation">
+        ```bash
+        python3.9 --version
+        ```
+
+        You should see `Python 3.9.x`.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Step 2: Clone the repository
+
+<Tabs>
+  <Tab title="Git (recommended)">
+    ```bash
+    git clone https://github.com/Raymo111/kahoot-answer-bot.git
+    cd kahoot-answer-bot
+    ```
+  </Tab>
+
+  <Tab title="Download ZIP">
+    1. Go to [github.com/Raymo111/kahoot-answer-bot](https://github.com/Raymo111/kahoot-answer-bot)
+    2. Click **Code** → **Download ZIP**
+    3. Extract the archive and navigate into the extracted folder:
+
+    ```bash
+    cd kahoot-answer-bot-main
+    ```
+  </Tab>
+</Tabs>
+
+## Step 3: Install dependencies
+
+With Python 3.9 installed and the repository cloned, install the required packages:
+
+```bash
+python3.9 -m pip install -r requirements.txt
+```
+
+<Note>
+  On Windows, replace `python3.9` with `python` (or `py -3.9`) if that is how your installation registered the binary.
+</Note>
+
+The `requirements.txt` installs:
+
+| Package | Version | Purpose |
+|---|---|---|
+| `requests` | ≥2.20.0 | HTTP calls to the Kahoot API |
+| `aiocometd` | 0.4.5 | CometD WebSocket protocol for joining games |
+| `py_mini_racer` | 0.6.0 | Executes Kahoot's JavaScript session challenge |
+| `colorama` | 0.4.6 | Colored terminal output |
+
+<Warning>
+  If you encounter `asyncio`-related errors at runtime, replace the `aiocometd` package with the patched fork by editing `requirements.txt` to use:
+
+  ```
+  aiocometd @ git+https://github.com/random-python/x_aiocometd@develop
+  ```
+
+  Then re-run `python3.9 -m pip install -r requirements.txt`.
+</Warning>
+
+## Verify the setup
+
+Run the help flag to confirm kbot is working:
+
+```bash
+python3.9 kbot --help
+```
+
+You should see the list of available CLI arguments. If you do, you're ready to play.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run kbot against a live Kahoot game in under 5 minutes.
+  </Card>
+  <Card title="Command reference" icon="terminal" href="/usage/command-reference">
+    Full reference for every CLI flag.
+  </Card>
+</CardGroup>

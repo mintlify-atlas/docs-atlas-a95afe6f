@@ -1,0 +1,96 @@
+---
+title: "Caveats"
+description: "Known limitations of Kahoot Answer Bot and the reasons behind them."
+---
+
+kbot works by fetching the original question and answer order from the Kahoot API before the game starts, then submitting the pre-fetched answer index for each question as it appears. This approach has several inherent limitations.
+
+<AccordionGroup>
+  <Accordion title="Private kahoots">
+    kbot cannot retrieve answers for quizzes that are set to private by their creator.
+
+    When a quiz is private, the Kahoot API returns an error rather than the question data. kbot surfaces this as:
+
+    ```text
+    No quiz found. (private?)
+    ```
+
+    or, when fetching by UUID:
+
+    ```text
+    Something went wrong finding answers.
+    ```
+
+    **Workaround:** You need access to a Kahoot account that owns or has been shared the private quiz. There is no way to bypass this with kbot.
+  </Accordion>
+
+  <Accordion title="Randomized answers">
+    <Warning>
+      If the host enables **answer shuffle** in game options, kbot will submit the wrong answer for every question.
+    </Warning>
+
+    kbot stores the correct answer as an index position (0–3) based on the original answer order from the API. If Kahoot shuffles the answers when displaying them to players, the answer at that index will be a different option than the one kbot fetched.
+
+    For example, if the correct answer is at index `2` in the API response but Kahoot moves it to index `0` during the game, kbot will submit `2` and get it wrong.
+
+    There is no way for kbot to detect whether answer randomization is enabled before a question appears.
+  </Accordion>
+
+  <Accordion title="Randomized questions">
+    <Warning>
+      If the host enables **question shuffle** in game options, kbot will submit answers for the wrong questions.
+    </Warning>
+
+    kbot matches answers to questions by their sequential position in the API response. If Kahoot reorders the questions for players, kbot will submit the answer for question N from the API against whichever question appears in position N during the game — which may be a completely different question.
+
+    There is no way for kbot to detect question order at runtime from the WebSocket messages alone.
+  </Accordion>
+
+  <Accordion title="Unsupported question types">
+    kbot only processes two question types:
+
+    ```python
+    allowedTypes = ['quiz', 'multiple_select_quiz']
+    ```
+
+    All other question types — including slides, open-ended questions, polls, and video questions — are not supported. When kbot encounters an unsupported type, it submits `DEFAULT_ANSWER = 1` (index 1, **BLUE**) as a placeholder and moves on.
+
+    This means kbot will not crash on mixed-format quizzes, but it will answer non-quiz questions with a fixed incorrect response.
+  </Accordion>
+
+  <Accordion title="Hardcoded captcha token">
+    The session setup sends a hardcoded CAPTCHA bypass token:
+
+    ```python
+    self.captchaToken = "KAHOOT_TOKEN_eyJ2ZXJzaW9uIjoiIn0="
+    ```
+
+    This token is derived from Kahoot's client-side JavaScript and is embedded statically in kbot. It will continue to work until Kahoot updates the token format or version string in their code. When that happens, kbot will fail to establish a session.
+
+    The session token challenge (the JavaScript puzzle that kbot solves using `py_mini_racer`) is a separate mechanism and is solved dynamically at runtime — it is not hardcoded.
+  </Accordion>
+
+  <Accordion title="Python 3.9 requirement">
+    kbot requires Python 3.9 and is not compatible with Python 3.10 or later.
+
+    Two dependencies constrain this:
+
+    - **`aiocometd`** relies on `asyncio` internals that changed in Python 3.10 (`asyncio.get_event_loop()` behavior and loop lifecycle). The pinned version `0.4.5` does not support the new behavior.
+    - **`py_mini_racer`** has binary wheel availability constraints that may not cover newer Python versions at the pinned version.
+
+    Running kbot under Python 3.10+ will result in runtime errors during the WebSocket connection phase.
+
+    <Note>
+      The `requirements.txt` includes a commented-out alternative `aiocometd` source from a fork that fixes some asyncio issues. If you need to run on a newer Python version, that fork may help — but it is not officially supported.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+<Columns cols={2}>
+  <Card title="Troubleshooting" icon="wrench" href="/reference/troubleshooting">
+    Error messages and how to fix them.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/reference/configuration">
+    Constructor parameters and internal constants.
+  </Card>
+</Columns>

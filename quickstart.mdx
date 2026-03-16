@@ -1,80 +1,147 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Run kbot against a live Kahoot game in minutes — no account required if you have the quiz UUID."
 ---
 
-## Get started in three steps
+There are two ways to play:
 
-Get your documentation site running locally and make your first customization.
+- **By quiz UUID** — fastest path, no Kahoot account needed
+- **By quiz name** — requires a Kahoot account (email + password)
 
-### Step 1: Set up your local environment
+Pick the tab that matches what you have available.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Tabs>
+  <Tab title="By quiz UUID (no account)">
+    This is the fastest path. You need the game pin and the quiz UUID — no Kahoot account required.
 
-### Step 2: Deploy your changes
+    <Steps>
+      <Step title="Get the game pin">
+        Ask the host for the **game pin** displayed on the Kahoot lobby screen. It is a 6–8 digit number.
+      </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+      <Step title="Get the quiz UUID">
+        The quiz UUID is a string in the format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`. You can find it in:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+        - The URL when viewing the quiz on [create.kahoot.it](https://create.kahoot.it): `https://create.kahoot.it/details/<uuid>`
+        - The URL in the game host's browser when they launch the quiz
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+        <Note>
+          Not all quizzes are publicly accessible. If the quiz is private, you need the host's Kahoot account or must use the search-by-name path instead.
+        </Note>
+      </Step>
 
-### Step 3: Go live
+      <Step title="Choose a nickname">
+        Pick any nickname you want to appear as in the game lobby.
+      </Step>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+      <Step title="Run kbot">
+        ```bash
+        python3.9 kbot -n <nickname> -p <pin> -i <quizID>
+        ```
+
+        For example:
+
+        ```bash
+        python3.9 kbot -n Player1 -p 123456 -i 550fa14b-4b7e-46ac-a239-e8b6d9dc7a89
+        ```
+      </Step>
+
+      <Step title="Watch kbot answer">
+        kbot will join the game and print each question and the correct answer to your terminal as the game progresses:
+
+        ```
+        Joined game as Player1
+        Question 1: What is the capital of France?
+        Correct answer: Paris (index 2)
+        Submitted answer 2
+        Question 2: What is 2 + 2?
+        Correct answer: 4 (index 0)
+        Submitted answer 0
+        ```
+
+        Correct answers are printed in green. No further interaction is needed — kbot handles the rest automatically.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="By quiz name (requires account)">
+    Use this path when you know the quiz's name but not its UUID. kbot will search the Kahoot API on your behalf.
+
+    <Steps>
+      <Step title="Get the game pin">
+        Ask the host for the **game pin** displayed on the Kahoot lobby screen. It is a 6–8 digit number.
+      </Step>
+
+      <Step title="Find the quiz name">
+        Get the exact name of the quiz as it appears on Kahoot. Partial matches are supported — kbot will return the closest results. You can control how many results are returned with `-m`.
+      </Step>
+
+      <Step title="Have your Kahoot credentials ready">
+        You need the email address and password for a [create.kahoot.it](https://create.kahoot.it) account.
+
+        <Warning>
+          Your credentials are passed as CLI arguments and may be visible in your shell history. Consider using a dedicated Kahoot account rather than your primary one.
+        </Warning>
+      </Step>
+
+      <Step title="Run kbot">
+        ```bash
+        python3.9 kbot -n <nickname> -p <pin> -q "<quiz name>" -e <email> -a <password>
+        ```
+
+        For example:
+
+        ```bash
+        python3.9 kbot -n Player1 -p 123456 -q "World Capitals" -e user@example.com -a mypassword
+        ```
+      </Step>
+
+      <Step title="Select the quiz">
+        If multiple quizzes match your search, kbot will list them and prompt you to pick one:
+
+        ```
+        Found 3 quizzes matching "World Capitals":
+        [0] World Capitals (550fa14b-4b7e-46ac-a239-e8b6d9dc7a89)
+        [1] World Capitals Quiz (81be3450-2af2-4b7f-b0c1-3cde1f2a9b44)
+        [2] World Capitals - Advanced (f4a12c30-9d82-4e67-b1f7-dc8aef3b2c01)
+        Select quiz [0-2]: 
+        ```
+
+        Enter the number for the quiz you want, then kbot joins the game and begins answering automatically.
+      </Step>
+
+      <Step title="Watch kbot answer">
+        kbot will join the game and print each question and the correct answer to your terminal:
+
+        ```
+        Joined game as Player1
+        Question 1: What is the capital of France?
+        Correct answer: Paris (index 2)
+        Submitted answer 2
+        Question 2: What is the largest country by area?
+        Correct answer: Russia (index 1)
+        Submitted answer 1
+        ```
+
+        Correct answers are printed in green. kbot handles the rest automatically.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Command reference" icon="terminal" href="/usage/command-reference">
+    See every CLI flag, including debug mode, search-only mode, and max result count.
+  </Card>
+  <Card title="Search mode" icon="magnifying-glass" href="/usage/search-mode">
+    Preview quiz answers without joining a live game.
+  </Card>
+  <Card title="Authentication" icon="key" href="/usage/authentication">
+    Learn how kbot uses your Kahoot credentials to search for quizzes by name.
+  </Card>
+  <Card title="Caveats" icon="triangle-exclamation" href="/reference/caveats">
+    Understand when kbot works and when it doesn't.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
